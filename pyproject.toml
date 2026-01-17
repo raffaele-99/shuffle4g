@@ -3,7 +3,7 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "Shuffle4G"
+name = "shuffle4g"
 version = "1.0.0"
 description = "A comprehensive tool for building the Track and Playlist database for the 4th generation iPod Shuffle."
 readme = "README.md"

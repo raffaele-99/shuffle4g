@@ -1,5 +1,5 @@
 Metadata-Version: 2.4
-Name: Shuffle4G
+Name: shuffle4g
 Version: 1.1.0
 Summary: A comprehensive tool for building the Track and Playlist database for the 4th generation iPod Shuffle.
 Author: r4ffaele
@@ -11,7 +11,7 @@ Requires-Dist: customtkinter
 Requires-Dist: mutagen
 Dynamic: license-file
 
-# Shuffle4G
+# shuffle4g
 
 tool for building the Track and Playlist database for 4th generation iPod Shuffles
 

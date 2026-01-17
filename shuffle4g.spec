@@ -41,7 +41,7 @@ exe = EXE(
     a.zipfiles,
     a.datas,
     [],
-    name='Shuffle4G',
+    name='shuffle4g',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -59,7 +59,7 @@ exe = EXE(
 # App bundle for macOS
 app = BUNDLE(
     exe,
-    name='Shuffle4G.app',
+    name='shuffle4g.app',
     icon=None,
     bundle_identifier=None,
 )

@@ -41,29 +41,29 @@ jobs:
         if: matrix.os == 'windows-latest'
         run: |
           cd dist
-          7z a Shuffle4G-windows.zip Shuffle4G.exe
+          7z a shuffle4g-windows.zip shuffle4g.exe
 
       - name: Archive artifacts (Linux)
         if: matrix.os == 'ubuntu-latest'
         run: |
           cd dist
-          tar -czvf Shuffle4G-linux.tar.gz Shuffle4G
+          tar -czvf shuffle4g-linux.tar.gz shuffle4g
 
       - name: Archive artifacts (macOS)
         if: matrix.os == 'macos-latest'
         run: |
           cd dist
           # On macOS we get a .app bundle. We should zip it.
-          # But for a single file executable it might be just 'Shuffle4G'. 
-          # The spec file creates a .app 'Shuffle4G.app'.
+          # But for a single file executable it might be just 'shuffle4g'. 
+          # The spec file creates a .app 'shuffle4g.app'.
           # Let's zip the .app
-          ditto -c -k --sequesterRsrc --keepParent Shuffle4G.app Shuffle4G-macos.zip
+          ditto -c -k --sequesterRsrc --keepParent shuffle4g.app shuffle4g-macos.zip
 
       - name: Upload Release Assets
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
-            dist/Shuffle4G-windows.zip
-            dist/Shuffle4G-linux.tar.gz
-            dist/Shuffle4G-macos.zip
+            dist/shuffle4g-windows.zip
+            dist/shuffle4g-linux.tar.gz
+            dist/shuffle4g-macos.zip
