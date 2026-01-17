@@ -1,18 +1,8 @@
-# Shuffle4G
+# shuffle4g
 
-tool for building the Track and Playlist database for 4th generation iPod Shuffles
+tool for building the Track and Playlist database for 4th generation iPod Shuffles.
 
-> [!NOTE]
-> this is just a wrapper around [nims11/IPod-Shuffle-4g](https://github.com/nims11/IPod-Shuffle-4g), all credit to the people involved there for the actual hard work =D
-
-## Features
-
-- **GUI Interface**: Easy-to-use graphical interface for syncing and updating your iPod.
-- **CLI Mode**: Powerful command-line interface for automation and advanced users.
-- **VoiceOver Support**: Generate track and playlist voiceovers in multiple languages.
-- **Unicode Support**: Automatic renaming of files to avoid unicode errors on the iPod.
-- **Volume Gain**: Normalize track volumes during sync.
-- **Playlist Management**: Automatic playlist generation from directories or ID3 tags.
+wrapper around [nims11/IPod-Shuffle-4g](https://github.com/nims11/IPod-Shuffle-4g). all credit to the people involved there for the actual hard work =D
 
 ## Installation
 
