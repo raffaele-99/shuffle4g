@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "Shuffle4G"
-version = "1.1.0"
+version = "1.0.0"
 description = "A comprehensive tool for building the Track and Playlist database for the 4th generation iPod Shuffle."
 readme = "README.md"
 requires-python = ">=3.8"
