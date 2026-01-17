@@ -11,25 +11,40 @@ A comprehensive tool for building the Track and Playlist database for the 4th ge
 - **Volume Gain**: Normalize track volumes during sync.
 - **Playlist Management**: Automatic playlist generation from directories or ID3 tags.
 
+## Installation
+
+You can install the project using `pip`:
+```bash
+pip install .
+```
+Or using `uv`:
+```bash
+uv pip install .
+```
+
 ## Usage
 
 ### GUI Mode
-Simply run the script without any arguments to launch the GUI:
+Simply run the GUI entry point or use the universal launcher:
 ```bash
+shuffle4g-gui
+# OR
 python3 main.py
 ```
 
 ### CLI Mode
-Use arguments to run the manager in command-line mode:
+Use the CLI entry point or arguments with the universal launcher:
 ```bash
+shuffle4g-cli [options] <path_to_ipod_root>
+# OR
 python3 main.py [options] <path_to_ipod_root>
 ```
 
 #### CLI Options
 ```
-usage: main.py [-h] [-t] [-p] [-u] [-g TRACK_GAIN]
-               [-d [AUTO_DIR_PLAYLISTS]] [-i [ID3_TEMPLATE]] [-v]
-               path
+usage: shuffle4g-cli [-h] [-t] [-p] [-u] [-g TRACK_GAIN]
+                     [-d [AUTO_DIR_PLAYLISTS]] [-i [ID3_TEMPLATE]] [-v]
+                     path
 
 positional arguments:
   path                  Path to the iPod's root directory
@@ -78,7 +93,5 @@ If you need to reformat, use **FAT16** without MBR/GPT:
 sudo mkfs.vfat -I -F 16 -n IPOD /dev/sdX
 ```
 
-## Documentation
-Additional technical details can be found in the `docs` folder:
-- [shuffle3db specification](docs/iTunesSD3gen.md)
-- [iTunes Stats specification](docs/iTunesStats3gen.md)
+## Acknowledgments
+Additional technical details can be found in the original repository documentation.

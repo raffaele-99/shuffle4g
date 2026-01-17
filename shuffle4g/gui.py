@@ -6,7 +6,7 @@ import shutil
 import time
 from tkinter import filedialog, messagebox
 
-# Import ipodshuffle modules
+# Import shuffle4g modules
 from .core import Shuffler
 from .utils import make_dir_if_absent, check_unicode
 
@@ -202,6 +202,9 @@ class App(customtkinter.CTk):
         if self.rename_unicode_var.get():
              check_unicode(dest_dir)
 
-if __name__ == "__main__":
+def main():
     app = App()
     app.mainloop()
+
+if __name__ == "__main__":
+    main()

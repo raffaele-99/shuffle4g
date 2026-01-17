@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "shuffle4g"
+version = "1.1.0"
+description = "A comprehensive tool for building the Track and Playlist database for the 4th generation iPod Shuffle."
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "GPL-3.0-only"}
+authors = [
+    {name = "r4ffaele"},
+]
+dependencies = [
+    "customtkinter",
+    "mutagen",
+]
+
+[project.scripts]
+shuffle4g-cli = "shuffle4g.cli:main"
+shuffle4g-gui = "shuffle4g.gui:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["shuffle4g*"]
