@@ -3,3 +3,14 @@
 *.swp
 *.log
 *.conf
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+ENV/
+
+# Build and Dist
+build/
+dist/

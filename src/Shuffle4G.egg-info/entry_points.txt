@@ -1,0 +1,3 @@
+[console_scripts]
+shuffle4g-cli = shuffle4g.cli:main
+shuffle4g-gui = shuffle4g.gui:main

@@ -1,0 +1,14 @@
+COPYING
+README.md
+pyproject.toml
+src/Shuffle4G.egg-info/PKG-INFO
+src/Shuffle4G.egg-info/SOURCES.txt
+src/Shuffle4G.egg-info/dependency_links.txt
+src/Shuffle4G.egg-info/entry_points.txt
+src/Shuffle4G.egg-info/requires.txt
+src/Shuffle4G.egg-info/top_level.txt
+src/shuffle4g/__init__.py
+src/shuffle4g/cli.py
+src/shuffle4g/core.py
+src/shuffle4g/gui.py
+src/shuffle4g/utils.py
