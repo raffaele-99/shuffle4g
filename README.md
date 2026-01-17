@@ -1,87 +1,22 @@
 # shuffle4g
 
-tool for building the Track and Playlist database for 4th generation iPod Shuffles.
+Desktop app to manage an iPod Shuffle 4th Generation.
 
-wrapper around [nims11/IPod-Shuffle-4g](https://github.com/nims11/IPod-Shuffle-4g). all credit to the people involved there for the actual hard work =D
+<div justify="center">
+<img width="1135" height="765" alt="Screenshot 2026-01-17 at 3 53 03 pm" src="https://github.com/user-attachments/assets/7b0c9e78-48f1-40c6-b87e-21a079c24c9b" />
+</div>
 
-## Installation
+This is just a GUI repackage of an existing tool, **the actual hard work was done by [nims11/IPod-Shuffle-4g](https://github.com/nims11/IPod-Shuffle-4g).**
 
-You can install the project using `pip`:
-```bash
-pip install .
-```
-Or using `uv`:
-```bash
-uv pip install .
-```
+## What works
 
-## Usage
+- moving mp3s to ipod and rebuilding the internal database a la itunes style
 
-### GUI Mode
-Simply run the GUI entry point or use the universal launcher:
-```bash
-shuffle4g-gui
-# OR
-python3 main.py
-```
+## TODO
 
-### CLI Mode
-Use the CLI entry point or arguments with the universal launcher:
-```bash
-shuffle4g-cli [options] <path_to_ipod_root>
-# OR
-python3 main.py [options] <path_to_ipod_root>
-```
-
-#### CLI Options
-```
-usage: shuffle4g-cli [-h] [-t] [-p] [-u] [-g TRACK_GAIN]
-                     [-d [AUTO_DIR_PLAYLISTS]] [-i [ID3_TEMPLATE]] [-v]
-                     path
-
-positional arguments:
-  path                  Path to the iPod's root directory
-
-optional arguments:
-  -h, --help            show this help message and exit
-  -t, --track-voiceover
-                        Enable track voiceover feature
-  -p, --playlist-voiceover
-                        Enable playlist voiceover feature
-  -u, --rename-unicode  Rename files causing unicode errors
-  -g TRACK_GAIN, --track-gain TRACK_GAIN
-                        Specify volume gain (0-99) for all tracks
-  -d [AUTO_DIR_PLAYLISTS], --auto-dir-playlists
-                        Generate automatic playlists from folders
-  -i [ID3_TEMPLATE], --auto-id3-playlists
-                        Generate automatic playlists from ID3 tags
-  -v, --verbose         Show verbose output
-```
-
-## Dependencies
-
-- [Python 3](https://www.python.org/download/releases/3.0/)
-- [customtkinter](https://github.com/Tooms7/customtkinter) (for GUI)
-- [Mutagen](https://github.com/quodlibet/mutagen) (optional, for ID3 tagging)
-
-### Voiceover Support (Optional)
-- **macOS**: `say` (built-in)
-- **Linux**: `eSpeak`, `pico2wave`, `RHVoice`, `SoX`
-
-## Tips and Tricks
-
-### Disable Trash for iPod
-To prevent Linux from moving deleted files to a hidden trash folder, you can create an empty file `.Trash-1000` in the iPod root. This forces permanent deletion. An example is in the `extras` folder.
-
-### Rhythmbox Integration
-Place a file called `.is_audio_player` (found in `extras`) in the iPod root to help Rhythmbox recognize it:
-```
-name="My IPOD"
-audio_folders=iPod_Control/Music/
-```
-
-### Formatting your iPod
-If you need to reformat, use **FAT16** without MBR/GPT:
-```bash
-sudo mkfs.vfat -I -F 16 -n IPOD /dev/sdX
-```
+- separate file copying from database creation (so users can rebuild databases of connected ipods without having to choose a source mp3 folder)
+- detect when an ipod is connected via USB + display connection status indicator
+- validate that the selected destination volume is actually an ipod
+- implement filesystem support to display what mp3s are on the ipod
+- add some sort of "check status" feature that checks if there any "ghost" mp3s on the ipod (i.e. mp3s that do not have entries in the internal database)
+- allow users to safely eject ipod disk from within the app
