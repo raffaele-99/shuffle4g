@@ -9,8 +9,8 @@ datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 
 
 a = Analysis(
-    ['../main.py'],
-    pathex=['..'],
+    ['main.py'],
+    pathex=['src'],
     binaries=binaries,
     datas=datas,
     hiddenimports=hiddenimports,
@@ -29,7 +29,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='IPodShuffleManager',
+    name='Shuffle4G',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -45,7 +45,7 @@ exe = EXE(
 )
 app = BUNDLE(
     exe,
-    name='IPodShuffleManager.app',
+    name='Shuffle4G.app',
     icon=None,
     bundle_identifier=None,
 )

@@ -1,3 +1,16 @@
+Metadata-Version: 2.4
+Name: Shuffle4G
+Version: 1.1.0
+Summary: A comprehensive tool for building the Track and Playlist database for the 4th generation iPod Shuffle.
+Author: r4ffaele
+License: GPL-3.0-only
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+License-File: COPYING
+Requires-Dist: customtkinter
+Requires-Dist: mutagen
+Dynamic: license-file
+
 # Shuffle4G
 
 tool for building the Track and Playlist database for 4th generation iPod Shuffles
