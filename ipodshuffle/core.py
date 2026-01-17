@@ -1,76 +1,18 @@
-#!/usr/bin/env python3
-
-# Builtin libraries
-import sys
+import collections
 import struct
-import urllib.request, urllib.parse, urllib.error
 import os
 import hashlib
-import subprocess
-import collections
-import errno
-import argparse
+import urllib.parse
 import shutil
 import re
-import tempfile
-import signal
+import sys
 
-# External libraries
 try:
     import mutagen
 except ImportError:
     mutagen = None
 
-audio_ext = (".mp3", ".m4a", ".m4b", ".m4p", ".aa", ".wav")
-list_ext = (".pls", ".m3u")
-def make_dir_if_absent(path):
-    try:
-        os.makedirs(path)
-    except OSError as exc:
-        if exc.errno != errno.EEXIST:
-            raise
-
-def raises_unicode_error(str):
-    try:
-        str.encode('latin-1')
-        return False
-    except (UnicodeEncodeError, UnicodeDecodeError):
-        return True
-
-def hash_error_unicode(item):
-    item_bytes = item.encode('utf-8')
-    return "".join(["{0:02X}".format(ord(x)) for x in reversed(hashlib.md5(item_bytes).hexdigest()[:8])])
-
-def validate_unicode(path):
-    path_list = path.split('/')
-    last_raise = False
-    for i in range(len(path_list)):
-        if raises_unicode_error(path_list[i]):
-            path_list[i] = hash_error_unicode(path_list[i])
-            last_raise = True
-        else:
-            last_raise = False
-    extension = os.path.splitext(path)[1].lower()
-    return "/".join(path_list) + (extension if last_raise and extension in audio_ext else '')
-
-def exec_exists_in_path(command):
-    with open(os.devnull, 'w') as FNULL:
-        try:
-            with open(os.devnull, 'r') as RFNULL:
-                subprocess.call([command], stdout=FNULL, stderr=subprocess.STDOUT, stdin=RFNULL)
-                return True
-        except OSError as e:
-            return False
-
-def splitpath(path):
-    return path.split(os.sep)
-
-def get_relpath(path, basepath):
-    commonprefix = os.sep.join(os.path.commonprefix(list(map(splitpath, [path, basepath]))))
-    return os.path.relpath(path, commonprefix)
-
-def is_path_prefix(prefix, path):
-    return prefix == os.sep.join(os.path.commonprefix(list(map(splitpath, [prefix, path]))))
+from .utils import Text2Speech, make_dir_if_absent, validate_unicode, get_relpath, is_path_prefix, audio_ext, list_ext
 
 def group_tracks_by_id3_template(tracks, template):
     grouped_tracks_dict = {}
@@ -95,115 +37,6 @@ def group_tracks_by_id3_template(tracks, template):
             grouped_tracks_dict[key].append(track)
 
     return sorted(grouped_tracks_dict.items())
-
-class Text2Speech(object):
-    valid_tts = {'pico2wave': True, 'RHVoice': True, 'espeak': True, 'say': True}
-
-    @staticmethod
-    def check_support():
-        voiceoverAvailable = False
-
-        # Check for macOS say voiceover
-        if not exec_exists_in_path("say"):
-            Text2Speech.valid_tts['say'] = False
-            print("Warning: macOS say not found, voicever won't be generated using it.")
-        else:
-            voiceoverAvailable = True
-
-        # Check for pico2wave voiceover
-        if not exec_exists_in_path("pico2wave"):
-            Text2Speech.valid_tts['pico2wave'] = False
-            print("Warning: pico2wave not found, voicever won't be generated using it.")
-        else:
-            voiceoverAvailable = True
-
-        # Check for espeak voiceover
-        if not exec_exists_in_path("espeak"):
-            Text2Speech.valid_tts['espeak'] = False
-            print("Warning: espeak not found, voicever won't be generated using it.")
-        else:
-            voiceoverAvailable = True
-
-        # Check for Russian RHVoice voiceover
-        if not exec_exists_in_path("RHVoice"):
-            Text2Speech.valid_tts['RHVoice'] = False
-            print("Warning: RHVoice not found, Russian voicever won't be generated.")
-        else:
-            voiceoverAvailable = True
-
-        # Return if we at least found one voiceover program.
-        # Otherwise this will result in silent voiceover for tracks and "Playlist N" for playlists.
-        return voiceoverAvailable
-
-    @staticmethod
-    def text2speech(out_wav_path, text):
-        # Skip voiceover generation if a track with the same name is used.
-        # This might happen with "Track001" or "01. Intro" names for example.
-        if os.path.isfile(out_wav_path):
-            verboseprint("Using existing", out_wav_path)
-            return True
-
-        # ensure we deal with unicode later
-        if not isinstance(text, str):
-            text = str(text, 'utf-8')
-        lang = Text2Speech.guess_lang(text)
-        if lang == "ru-RU":
-            return Text2Speech.rhvoice(out_wav_path, text)
-        else:
-            if Text2Speech.pico2wave(out_wav_path, text):
-                return True
-            elif Text2Speech.espeak(out_wav_path, text):
-                return True
-            elif Text2Speech.say(out_wav_path, text):
-                return True
-            else:
-                return False
-
-    # guess-language seems like an overkill for now
-    @staticmethod
-    def guess_lang(unicodetext):
-        lang = 'en-GB'
-        if re.search("[А-Яа-я]", unicodetext) is not None:
-            lang = 'ru-RU'
-        return lang
-
-    @staticmethod
-    def pico2wave(out_wav_path, unicodetext):
-        if not Text2Speech.valid_tts['pico2wave']:
-            return False
-        subprocess.call(["pico2wave", "-l", "en-GB", "-w", out_wav_path, '--', unicodetext])
-        return True
-
-    @staticmethod
-    def say(out_wav_path, unicodetext):
-        if not Text2Speech.valid_tts['say']:
-            return False
-        subprocess.call(["say", "-o", out_wav_path, '--data-format=LEI16', '--file-format=WAVE', '--', unicodetext])
-        return True
-
-    @staticmethod
-    def espeak(out_wav_path, unicodetext):
-        if not Text2Speech.valid_tts['espeak']:
-            return False
-        subprocess.call(["espeak", "-v", "english_rp", "-s", "150", "-w", out_wav_path, '--', unicodetext])
-        return True
-
-    @staticmethod
-    def rhvoice(out_wav_path, unicodetext):
-        if not Text2Speech.valid_tts['RHVoice']:
-            return False
-
-        tmp_file = tempfile.NamedTemporaryFile(suffix=".wav", delete=False)
-        tmp_file.close()
-
-        proc = subprocess.Popen(["RHVoice", "--voice=Elena", "--variant=Russian", "--volume=100", "-o", tmp_file.name], stdin=subprocess.PIPE)
-        proc.communicate(input=unicodetext.encode('utf-8'))
-        # make a little bit louder to be comparable with pico2wave
-        subprocess.call(["sox", tmp_file.name, out_wav_path, "norm"])
-
-        os.remove(tmp_file.name)
-        return True
-
 
 class Record(object):
 
@@ -236,12 +69,19 @@ class Record(object):
             # Create the voiceover wav file
             fn = ''.join(format(x, '02x') for x in reversed(dbid))
             path = os.path.join(self.base, "iPod_Control", "Speakable", "Tracks" if not playlist else "Playlists", fn + ".wav")
-            return Text2Speech.text2speech(path, text)
+            
+            verbose_callback = print if self.shuffledb.verbose else lambda *a, **k: None
+            return Text2Speech.text2speech(path, text, verboseprint=verbose_callback)
         return False
 
     def path_to_ipod(self, filename):
         if os.path.commonprefix([os.path.abspath(filename), self.base]) != self.base:
-            raise IOError("Cannot get Ipod filename, since file is outside the IPOD path")
+            # raise IOError("Cannot get Ipod filename, since file is outside the IPOD path")
+            # Relaxed check or relative path handling? 
+            # Original code raised IOError.
+            # If we are syncing files, they should be on the iPod now.
+            # But let's check if we can support partial paths or if we strictly require abspath match.
+            raise IOError(f"Cannot get Ipod filename, since file {filename} is outside the IPOD path {self.base}")
         baselen = len(self.base)
         if self.base.endswith(os.path.sep):
             baselen -= 1
@@ -336,7 +176,8 @@ class TrackHeader(Record):
         track_chunk = bytes()
         for i in self.tracks:
             track = Track(self)
-            verboseprint("[*] Adding track", i)
+            if self.shuffledb.verbose:
+                print("[*] Adding track", i)
             track.populate(i)
             output += struct.pack("I", self.base_offset + self["total_length"] + len(track_chunk))
             track_chunk += track.construct()
@@ -433,7 +274,8 @@ class PlaylistHeader(Record):
     def construct(self, tracks):
         # Build the master list
         masterlist = Playlist(self)
-        verboseprint("[+] Adding master playlist")
+        if self.shuffledb.verbose:
+            print("[+] Adding master playlist")
         masterlist.set_master(tracks)
         chunks = [masterlist.construct(tracks)]
 
@@ -441,14 +283,20 @@ class PlaylistHeader(Record):
         playlistcount = 1
         for i in self.lists:
             playlist = Playlist(self)
-            verboseprint("[+] Adding playlist", (i[0] if type(i) == type(()) else i))
+            if self.shuffledb.verbose:
+                print("[+] Adding playlist", (i[0] if type(i) == type(()) else i))
             playlist.populate(i)
-            construction = playlist.construct(tracks)
-            if playlist["number_of_songs"] > 0:
-                playlistcount += 1
-                chunks += [construction]
-            else:
-                print("Error: Playlist does not contain a single track. Skipping playlist.")
+            
+            # Catch errors in logic or bad playlists
+            try:
+                construction = playlist.construct(tracks)
+                if playlist["number_of_songs"] > 0:
+                    playlistcount += 1
+                    chunks += [construction]
+                else:
+                    print("Error: Playlist does not contain a single track. Skipping playlist.")
+            except Exception as e:
+                print(f"Error constructing playlist: {e}")
 
         self["number_of_playlists"] = playlistcount
         self["total_length"] = 0x14 + (self["number_of_playlists"] * 4)
@@ -524,7 +372,7 @@ class Playlist(Record):
             if "/." not in dirpath:
                 for filename in sorted(filenames, key = lambda x: x.lower()):
                     # Only add valid music files to playlist
-                    if os.path.splitext(filename)[1].lower() in (".mp3", ".m4a", ".m4b", ".m4p", ".aa", ".wav"):
+                    if os.path.splitext(filename)[1].lower() in audio_ext:
                         fullPath = os.path.abspath(os.path.join(dirpath, filename))
                         listtracks.append(fullPath)
             if not recursive:
@@ -559,7 +407,7 @@ class Playlist(Record):
                 elif extension == '.m3u':
                     self.listtracks = self.populate_m3u(data)
                 else:
-                    raise
+                    raise Exception("Unknown playlist extension")
 
                 # Ensure all paths are not relative to the playlist file
                 for i in range(len(self.listtracks)):
@@ -594,7 +442,7 @@ class Playlist(Record):
         return output + chunks
 
 class Shuffler(object):
-    def __init__(self, path, track_voiceover=False, playlist_voiceover=False, rename=False, trackgain=0, auto_dir_playlists=None, auto_id3_playlists=None):
+    def __init__(self, path, track_voiceover=False, playlist_voiceover=False, rename=False, trackgain=0, auto_dir_playlists=None, auto_id3_playlists=None, verbose=False):
         self.path = os.path.abspath(path)
         self.tracks = []
         self.albums = []
@@ -607,6 +455,7 @@ class Shuffler(object):
         self.trackgain = trackgain
         self.auto_dir_playlists = auto_dir_playlists
         self.auto_id3_playlists = auto_id3_playlists
+        self.verbose = verbose
 
     def initialize(self):
       # remove existing voiceover files (they are either useless or will be overwritten anyway)
@@ -633,9 +482,9 @@ class Shuffler(object):
                     # Ignore hidden files
                     if not filename.startswith("."):
                         fullPath = os.path.abspath(os.path.join(dirpath, filename))
-                        if os.path.splitext(filename)[1].lower() in (".mp3", ".m4a", ".m4b", ".m4p", ".aa", ".wav"):
+                        if os.path.splitext(filename)[1].lower() in audio_ext:
                             self.tracks.append(fullPath)
-                        if os.path.splitext(filename)[1].lower() in (".pls", ".m3u"):
+                        if os.path.splitext(filename)[1].lower() in list_ext:
                             self.lists.append(fullPath)
 
             # Create automatic playlists in music directory.
@@ -669,128 +518,3 @@ class Shuffler(object):
         print("Albums", len(self.albums))
         print("Artists", len(self.artists))
         print("Playlists", len(self.lists))
-
-#
-# Read all files from the directory
-# Construct the appropriate iTunesDB file
-# Construct the appropriate iTunesSD file
-#   http://shuffle3db.wikispaces.com/iTunesSD3gen
-# Use SVOX pico2wave and RHVoice to produce voiceover data
-#
-
-def check_unicode(path):
-    ret_flag = False # True if there is a recognizable file within this level
-    for item in os.listdir(path):
-        if os.path.isfile(os.path.join(path, item)):
-            if os.path.splitext(item)[1].lower() in audio_ext+list_ext:
-                ret_flag = True
-                if raises_unicode_error(item):
-                    src = os.path.join(path, item)
-                    dest = os.path.join(path, hash_error_unicode(item)) + os.path.splitext(item)[1].lower()
-                    print('Renaming %s -> %s' % (src, dest))
-                    os.rename(src, dest)
-        else:
-            ret_flag = (check_unicode(os.path.join(path, item)) or ret_flag)
-            if ret_flag and raises_unicode_error(item):
-                src = os.path.join(path, item)
-                new_name = hash_error_unicode(item)
-                dest = os.path.join(path, new_name)
-                print('Renaming %s -> %s' % (src, dest))
-                os.rename(src, dest)
-    return ret_flag
-
-def nonnegative_int(string):
-    try:
-        intval = int(string)
-    except ValueError:
-        raise argparse.ArgumentTypeError("'%s' must be an integer" % string)
-
-    if intval < 0 or intval > 99:
-        raise argparse.ArgumentTypeError("Track gain value should be in range 0-99")
-    return intval
-
-def checkPathValidity(path):
-    if not os.path.isdir(result.path):
-        print("Error finding IPod directory. Maybe it is not connected or mounted?")
-        sys.exit(1)
-
-    if not os.access(result.path, os.W_OK):
-        print('Unable to get write permissions in the IPod directory')
-        sys.exit(1)
-
-def handle_interrupt(signal, frame):
-    print("Interrupt detected, exiting...")
-    sys.exit(1)
-
-if __name__ == '__main__':
-    signal.signal(signal.SIGINT, handle_interrupt)
-
-    parser = argparse.ArgumentParser(description=
-    'Python script for building the Track and Playlist database '
-    'for the newer gen IPod Shuffle. Version 1.5')
-
-    parser.add_argument('-t', '--track-voiceover', action='store_true',
-    help='Enable track voiceover feature')
-
-    parser.add_argument('-p', '--playlist-voiceover', action='store_true',
-    help='Enable playlist voiceover feature')
-
-    parser.add_argument('-u', '--rename-unicode', action='store_true',
-    help='Rename files causing unicode errors, will do minimal required renaming')
-
-    parser.add_argument('-g', '--track-gain', type=nonnegative_int, default='0',
-    help='Specify volume gain (0-99) for all tracks; '
-    '0 (default) means no gain and is usually fine; '
-    'e.g. 60 is very loud even on minimal player volume')
-
-    parser.add_argument('-d', '--auto-dir-playlists', type=int, default=None, const=-1, nargs='?',
-    help='Generate automatic playlists for each folder recursively inside '
-    '"IPod_Control/Music/". You can optionally limit the depth: '
-    '0=root, 1=artist, 2=album, n=subfoldername, default=-1 (No Limit).')
-
-    parser.add_argument('-i', '--auto-id3-playlists', type=str, default=None, metavar='ID3_TEMPLATE', const='{artist}', nargs='?',
-    help='Generate automatic playlists based on the id3 tags of any music '
-    'added to the iPod. You can optionally specify a template string '
-    'based on which id3 tags are used to generate playlists. For eg. '
-    '\'{artist} - {album}\' will use the pair of artist and album to group '
-    'tracks under one playlist. Similarly \'{genre}\' will group tracks based '
-    'on their genre tag. Default template used is \'{artist}\'')
-
-    parser.add_argument('-v', '--verbose', action='store_true',
-    help='Show verbose output of database generation.')
-
-    parser.add_argument('path', help='Path to the IPod\'s root directory')
-
-    result = parser.parse_args()
-
-    # Enable verbose printing if desired
-    verboseprint = print if result.verbose else lambda *a, **k: None
-
-    checkPathValidity(result.path)
-
-    if result.rename_unicode:
-        check_unicode(result.path)
-
-    if not mutagen:
-        print("Warning: No mutagen found. Database will not contain any album nor artist information.")
-
-    verboseprint("Playlist voiceover requested:", result.playlist_voiceover)
-    verboseprint("Track voiceover requested:", result.track_voiceover)
-    if (result.track_voiceover or result.playlist_voiceover):
-        if not Text2Speech.check_support():
-            print("Error: Did not find any voiceover program. Voiceover disabled.")
-            result.track_voiceover = False
-            result.playlist_voiceover = False
-        else:
-            verboseprint("Voiceover available.")
-
-    shuffle = Shuffler(result.path,
-                       track_voiceover=result.track_voiceover,
-                       playlist_voiceover=result.playlist_voiceover,
-                       rename=result.rename_unicode,
-                       trackgain=result.track_gain,
-                       auto_dir_playlists=result.auto_dir_playlists,
-                       auto_id3_playlists=result.auto_id3_playlists)
-    shuffle.initialize()
-    shuffle.populate()
-    shuffle.write_database()
